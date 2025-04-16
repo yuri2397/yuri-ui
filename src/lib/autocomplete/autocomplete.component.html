@@ -1,0 +1,97 @@
+<div class="yuri-autocomplete">
+  <div class="yuri-autocomplete-input-container">
+    <div class="yuri-autocomplete-search-icon">
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <circle cx="11" cy="11" r="8"></circle>
+        <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+      </svg>
+    </div>
+    <input #inputElement type="text" class="yuri-autocomplete-input" [placeholder]="placeholder"
+      [ngModel]="searchText()" (ngModelChange)="searchText.set($event); onInputChange({target: {value: $event}})"
+      (focus)="onFocus()" (blur)="onBlur()" (keydown)="onKeyDown($event)" />
+    <div class="yuri-autocomplete-clear-icon" *ngIf="clearable && searchText()" (click)="clearSearch()">
+      <span>Clear</span>
+      <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none"
+        stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </div>
+  </div>
+
+  <div class="yuri-autocomplete-dropdown" *ngIf="showDropdown()">
+    <!-- Projection de contenu pour options personnalisées -->
+    <ng-content *ngIf="hasCustomOptions()"></ng-content>
+
+    <!-- Affichage par défaut des résultats -->
+    <ng-container *ngIf="!hasCustomOptions()">
+      <ng-container *ngFor="let group of groupedItems() | keyvalue">
+        <!-- En-tête de groupe -->
+        <div class="yuri-autocomplete-group">
+          <!-- Template de groupe personnalisé -->
+          <ng-container *ngIf="customGroupTemplate; else defaultGroup">
+            <ng-container
+              *ngTemplateOutlet="customGroupTemplate; context: { $implicit: group.key, items: group.value }"></ng-container>
+          </ng-container>
+
+          <!-- Template de groupe par défaut -->
+          <ng-template #defaultGroup>
+            <div class="yuri-autocomplete-group-header">{{ group.key }}</div>
+          </ng-template>
+
+          <!-- Éléments du groupe -->
+          <ng-container *ngFor="let item of group.value; let i = index">
+            <div class="yuri-autocomplete-item"
+              [class.yuri-autocomplete-item-selected]="filteredItems().indexOf(item) === selectedIndex()"
+              (click)="selectItem(item)">
+              <!-- Template d'élément personnalisé -->
+              <ng-container *ngIf="customItemTemplate; else defaultItem">
+                <ng-container
+                  *ngTemplateOutlet="customItemTemplate; context: { $implicit: item, index: i, searchText: searchText() }"></ng-container>
+              </ng-container>
+
+              <!-- Template d'élément par défaut -->
+              <ng-template #defaultItem>
+                <div class="yuri-autocomplete-item-content">
+                  <span [innerHTML]="highlightText(getDisplayValue(item), searchText())"></span>
+                </div>
+              </ng-template>
+            </div>
+          </ng-container>
+        </div>
+      </ng-container>
+
+      <!-- Message "aucun résultat" -->
+      <div class="yuri-autocomplete-no-results" *ngIf="filteredItems().length === 0 && searchText().length >= minChars">
+        <!-- Template personnalisé pour "aucun résultat" -->
+        <ng-container *ngIf="customNoResultsTemplate; else defaultNoResults">
+          <ng-container
+            *ngTemplateOutlet="customNoResultsTemplate; context: { $implicit: searchText() }"></ng-container>
+        </ng-container>
+
+        <!-- Template par défaut pour "aucun résultat" -->
+        <ng-template #defaultNoResults>
+          <span>No results found</span>
+        </ng-template>
+      </div>
+    </ng-container>
+
+    <!-- Instructions de navigation au clavier -->
+    <div class="yuri-autocomplete-footer" *ngIf="displayFooter">
+      <div class="yuri-autocomplete-footer-item">
+        <div class="yuri-autocomplete-keyboard-key">↑</div>
+        <div class="yuri-autocomplete-keyboard-key">↓</div>
+        <span>To navigate</span>
+      </div>
+      <div class="yuri-autocomplete-footer-item">
+        <div class="yuri-autocomplete-keyboard-key">↵</div>
+        <span>To select</span>
+      </div>
+      <div class="yuri-autocomplete-footer-item">
+        <div class="yuri-autocomplete-keyboard-key">esc</div>
+        <span>To dismiss</span>
+      </div>
+    </div>
+  </div>
+</div>
